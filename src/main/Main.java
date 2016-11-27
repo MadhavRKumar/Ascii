@@ -25,7 +25,7 @@ public class Main extends Application{
 		if(file!=null){
 			BufferedImage bim = ImageIO.read(file);
 			AsciiMaker maker = new AsciiMaker(bim);
-			BufferedImage ascii = maker.makeImage();
+			BufferedImage ascii = maker.getColorImage();
 			File save = fc.showSaveDialog(primaryStage);
 			if(file !=null){
 				try{

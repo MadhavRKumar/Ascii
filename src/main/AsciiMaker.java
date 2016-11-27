@@ -13,11 +13,12 @@ public class AsciiMaker {
 	private BufferedImage asciiImage;
 	private final String[] SYMBOLS = {"@", "%", "#", "x", "+", "=", ":", "-", ".", " "};
 	private final int WIDTH = 200;
+	private Color[][] colorArray;
 	public AsciiMaker(BufferedImage image){
 		originalImage = resize(image);
 		asciiImage = new BufferedImage(originalImage.getWidth(), originalImage.getHeight(), originalImage.getType());
-		int[][] arr = makePixelArray();
-		makeAscii(arr);
+		colorArray = makePixelArray();
+		makeAscii();
 	}
 	
 	private BufferedImage resize(BufferedImage image){
@@ -28,14 +29,14 @@ public class AsciiMaker {
 		g2d.drawImage(image, 0, 0, WIDTH, newHeight, null);
 		return newImage;
 	}
-
-	private int[][] makePixelArray() {
+	
+	private Color[][] makePixelArray() {
 		byte[] pixels = ((DataBufferByte)originalImage.getRaster().getDataBuffer()).getData();
 		boolean hasAlpha = originalImage.getAlphaRaster() != null;
 		int pixelLength = hasAlpha ? 4 : 3;
 		int width = originalImage.getWidth();
 		int height = originalImage.getHeight();
-		int[][] pixArray = new int[height][width];
+		Color[][] pixArray = new Color[height][width];
 		int argb;
 		for (int pixel=0, row=0, col=0; pixel<pixels.length; pixel+=pixelLength){
 			int pos = pixel;
@@ -44,7 +45,7 @@ public class AsciiMaker {
 			argb += (((int) pixels[pos++]&0xff)<<8);
 			argb += (((int) pixels[pos++]&0xff)<<16);
 			Color c = new Color(argb);
-			pixArray[row][col] = (int)((c.getBlue()+c.getRed() + c.getGreen())/3.0);
+			pixArray[row][col] = c;
 		    col++;
 		    if (col == width) {
 		    	col = 0;
@@ -54,17 +55,28 @@ public class AsciiMaker {
 		return pixArray;
 	}
 	
-	private void makeAscii(int[][] arr){
-		for(int x=0; x<arr.length; x++){
-			for(int y=0; y<arr[x].length; y++){
-				int index = (int)(arr[x][y]/255.0 * (SYMBOLS.length-1));
+	private void makeAscii(){
+		for(int x=0; x<colorArray.length; x++){
+			for(int y=0; y<colorArray[x].length; y++){
+				Color c = colorArray[x][y];
+				double average = (c.getRed()+c.getGreen()+c.getBlue())/3.0;
+				double val = (average/255.0 );
+				int index = (int)(val * (SYMBOLS.length-1));
 				ascii.append(SYMBOLS[index]);
 			}
 			ascii.append("\n");
 		}
 	}
 	
-	public BufferedImage makeImage(){
+	public BufferedImage getBWImage(){
+		return makeImage(false);
+	}
+	
+	public BufferedImage getColorImage(){
+		return makeImage(true);
+	}
+	
+	private BufferedImage makeImage(boolean isColor){
 		String[] lines = ascii.toString().split("\n");
 		Graphics2D g2d = asciiImage.createGraphics();
 		Font font = new Font("Courier",Font.PLAIN, 20);
@@ -72,6 +84,7 @@ public class AsciiMaker {
 		FontMetrics fm = g2d.getFontMetrics();
 		int width = fm.stringWidth(lines[0]);
 		int height = (int)(fm.getHeight()*0.8);
+		int charWidth = fm.stringWidth("A");
 		g2d.dispose();
 		asciiImage = new BufferedImage(width,height*lines.length, originalImage.getType());
 		g2d = asciiImage.createGraphics();
@@ -80,9 +93,16 @@ public class AsciiMaker {
 		g2d.setFont(font);
 		g2d.setColor(Color.BLACK);
 		for(int x=0; x<lines.length; x++){
+			String[] stringArr = lines[x].split("");
 			int xPos = 0;
 			int yPos = (int)(x*height);
-			g2d.drawString(lines[x], xPos, yPos);	
+			for(int y=0; y<stringArr.length; y++){
+				if(isColor){
+					g2d.setColor(colorArray[x][y]);
+				}
+				g2d.drawString(stringArr[y], xPos, yPos);
+				xPos += charWidth;
+			}	
 		}
 		g2d.dispose();
 
