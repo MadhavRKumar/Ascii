@@ -36,6 +36,7 @@ public class View {
 		gridPane.setAlignment(Pos.CENTER);
 		gridPane.setHgap(15);
 		Button open = new Button("Choose Image");
+		myStage.setTitle("Image2ASCII");
 		open.setOnAction((event) ->{
 			openImage();
 		});
@@ -44,6 +45,10 @@ public class View {
 		RadioButton bw = new RadioButton("Monochrome");
 		color.setToggleGroup(group);
 		bw.setToggleGroup(group);
+		bw.setSelected(true);
+		group.selectedToggleProperty().addListener(event ->{
+			isColor = (group.getSelectedToggle()).equals(color);
+		});
 		gridPane.add(open, 0, 0);
 		gridPane.add(bw, 1, 0);
 		gridPane.add(color, 1, 1);
@@ -61,7 +66,7 @@ public class View {
 			try{
 			BufferedImage bim = ImageIO.read(file);
 			AsciiMaker maker = new AsciiMaker(bim);
-			BufferedImage ascii = maker.getColorImage();
+			BufferedImage ascii = isColor ? maker.getColorImage() : maker.getBWImage();
 			ImageViewer iv = new ImageViewer(ascii);
 			iv.display();
 			} catch(IOException e){
