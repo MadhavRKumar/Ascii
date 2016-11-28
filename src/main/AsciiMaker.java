@@ -86,7 +86,7 @@ public class AsciiMaker {
 		int height = (int)(fm.getHeight()*0.8);
 		int charWidth = fm.stringWidth("A");
 		g2d.dispose();
-		asciiImage = new BufferedImage(width,height*lines.length, originalImage.getType());
+		asciiImage = new BufferedImage(width,height*(lines.length-1), originalImage.getType());
 		g2d = asciiImage.createGraphics();
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(0, 0, width, asciiImage.getHeight());
